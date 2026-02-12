@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>gaiabangles</title>
+  <meta name="description" content="gaiabangles — curated bangles & sets. Order via Instagram." />
+
+  <style>
+    :root{
+      --bg:#ffffff; --soft:#faf7ff; --text:#111; --muted:#555;
+      --border:#eee; --card:#fff; --radius:18px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:var(--bg)}
+    a{color:inherit}
+    .wrap{max-width:1050px;margin:0 auto;padding:0 16px}
+    header{background:var(--soft);padding:34px 0 18px;border-bottom:1px solid var(--border)}
+    .top{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+    h1{margin:0;font-size:34px;letter-spacing:.3px}
+    .tag{margin:6px 0 0;color:var(--muted)}
+    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
+      text-decoration:none;border:1px solid #ddd;background:#fff}
+    .btn:hover{transform:translateY(-1px)}
+    main{padding:22px 0 30px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    .card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+    .card img{width:100%;height:240px;object-fit:cover;background:#f4f4f4}
+    .p{padding:14px}
+    .name{font-weight:700}
+    .meta{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.35}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+    .price{font-weight:700}
+    footer{border-top:1px solid var(--border);padding:18px 0;color:var(--muted)}
+    .small{font-size:13px}
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>gaiabangles</h1>
+          <p class="tag">Bangles • Sets • Everyday + statement pieces</p>
+        </div>
+        <div class="cta">
+          <a class="btn" href="https://www.instagram.com" target="_blank" rel="noreferrer">Order on Instagram</a>
+          <!-- Optional: add WhatsApp later -->
+          <!-- <a class="btn" href="https://wa.me/COUNTRYCODEPHONENUMBER?text=Hi%20I%20want%20to%20order%20from%20gaiabangles" target="_blank">WhatsApp</a> -->
+        </div>
+      </div>
+      <p class="small">Tip: Tap a product → message us the product name to order.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="grid">
+
+        <!-- 1 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/thick.jpg" alt="Thick Bangles">
+          <div class="p">
+            <div class="name">Thick</div>
+            <div class="row">
+              <div class="meta">Bold statement bangles</div>
+              <div class="price">$15</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 2 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/thin.jpg" alt="Thin Bangles">
+          <div class="p">
+            <div class="name">Thin</div>
+            <div class="row">
+              <div class="meta">Minimal everyday wear</div>
+              <div class="price">$13</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 3 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/twisted.jpg" alt="Twisted Bangles">
+          <div class="p">
+            <div class="name">Twisted</div>
+            <div class="row">
+              <div class="meta">Texture + shine</div>
+              <div class="price">$20</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 4 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/rings.jpg" alt="Bangle Rings">
+          <div class="p">
+            <div class="name">Rings</div>
+            <div class="row">
+              <div class="meta">Stackable ring bangles</div>
+              <div class="price">$9</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 5 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/maxi.jpg" alt="Maxi Bangles">
+          <div class="p">
+            <div class="name">Maxi</div>
+            <div class="row">
+              <div class="meta">Extra-bold statement piece</div>
+              <div class="price">$30</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 6 -->
+        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <img src="images/maxi.jpg" alt="Talisman Bangles">
+          <div class="p">
+            <div class="name">Talisman</div>
+            <div class="row">
+              <div class="meta">Clean talisman finish</div>
+              <div class="price">$35</div>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap small">
+      © <span id="y"></span> gaiabangles • Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
