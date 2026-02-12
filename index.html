@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>gaiabangles</title>
-  <meta name="description" content="gaiabangles — bangles & sets. Choose color, size, quantity. Basket + total. Order via Instagram DM." />
+  <meta name="description" content="gaiabangles — choose color, size, quantity. Basket + total. Order via Google Form." />
 
   <style>
     :root{
@@ -32,7 +32,10 @@
     .price{font-weight:800}
     .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
-    select,input[type="number"]{width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;background:#fff}
+    select,input[type="number"],input[type="text"],input[type="email"],textarea{
+      width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;background:#fff;box-sizing:border-box
+    }
+    textarea{min-height:70px;resize:vertical}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
     .controls .full{grid-column:1 / -1}
     .addrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
@@ -42,7 +45,7 @@
 
     /* Modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px}
-    .modal{background:#fff;border-radius:18px;max-width:720px;width:100%;border:1px solid #eee;overflow:hidden}
+    .modal{background:#fff;border-radius:18px;max-width:780px;width:100%;border:1px solid #eee;overflow:hidden}
     .modal-h{padding:14px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .modal-b{padding:14px 16px}
     .cart-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid #f1f1f1}
@@ -52,9 +55,7 @@
     .ci-actions{display:flex;gap:10px;align-items:center}
     .linkbtn{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 10px;cursor:pointer}
     .totals{margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
-    .checkout{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .warn{background:#fff8e1;border:1px solid #ffe4a3;color:#6b4f00;border-radius:12px;padding:10px;margin-top:10px;font-size:13px}
-    .ok{background:#eefbf0;border:1px solid #bfe8c7;color:#1b5e20;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;display:none}
+    .warn{background:#fff8e1;border:1px solid #ffe4a3;color:#6b4f00;border-radius:12px;padding:10px;margin-top:12px;font-size:13px}
   </style>
 </head>
 
@@ -64,7 +65,7 @@
       <div class="top">
         <div>
           <h1>gaiabangles</h1>
-          <p class="tag">Choose color + size + quantity • Add to basket • Order via Instagram DM</p>
+          <p class="tag">Choose color + size + quantity • Add to basket • Submit delivery info • Place order</p>
         </div>
         <div class="cta">
           <button class="btn" id="openCartBtn" type="button">
@@ -73,7 +74,7 @@
           <a class="btn" id="igBtn" href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
         </div>
       </div>
-      <p class="small">Tip: When you checkout, we’ll copy your basket summary. Paste it into our Instagram DM to confirm.</p>
+      <p class="small">Checkout opens a Google Form with your basket + total already filled. Submit the form to place your order.</p>
     </div>
   </header>
 
@@ -106,39 +107,70 @@
         </div>
 
         <div class="warn">
-          Instagram doesn’t reliably support pre-filled DM messages from websites. The button below will copy your order, then open our Instagram page. Paste the message into DM and send.
+          After clicking <b>Submit order</b>, a Google Form will open with your basket details pre-filled. Please press <b>Submit</b> on the form to finalize the order.
         </div>
-        <div class="ok" id="copiedOk">Copied! Instagram opened — paste the message into DM.</div>
 
-        <div class="checkout">
-          <button class="btn" id="copyBtn" type="button">Copy order</button>
-          <button class="btn" id="checkoutBtn" type="button">Checkout via Instagram DM</button>
-        </div>
+        <!-- Checkout form -->
+        <form id="checkoutForm" style="margin-top:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label for="firstName">First name</label>
+              <input id="firstName" name="firstName" required type="text" />
+            </div>
+            <div>
+              <label for="lastName">Last name</label>
+              <input id="lastName" name="lastName" required type="text" />
+            </div>
+
+            <div style="grid-column:1 / -1">
+              <label for="phone">Phone number</label>
+              <input id="phone" name="phone" required type="text" placeholder="+961..." />
+            </div>
+
+            <div style="grid-column:1 / -1">
+              <label for="address">Full delivery address (Lebanon)</label>
+              <textarea id="address" name="address" required placeholder="Street, building, floor, city, district..."></textarea>
+            </div>
+
+            <div style="grid-column:1 / -1">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required />
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button class="btn" id="submitOrderBtn" type="submit">Submit order</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
   <script>
-    // ✅ Set this to your real profile URL
-    const INSTAGRAM_PROFILE_URL = "https://www.instagram.com"; // <-- replace with your profile link
-    
+    // =========================
+    // CONFIG (edit these)
+    // =========================
+
+    // ✅ Put your real Instagram profile URL here
+    const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/gaiabangles/";
+
     // ✅ Your Google Form prefill base
     const GOOGLE_FORM_BASE =
       "https://docs.google.com/forms/d/e/1FAIpQLSeIbRbmt_-ChjBlGUp2R5MAxlMa-jWXWgSPS-hHwHPfQMJcJQ/viewform?usp=pp_url";
-    
-    // ✅ Your entry IDs
+
+    // ✅ Your entry IDs (from your link)
     const ENTRY_NAME      = "entry.2005620554";
     const ENTRY_EMAIL     = "entry.1045781291";
     const ENTRY_ADDRESS   = "entry.1065046570";
     const ENTRY_PHONE     = "entry.1166974658";
     const ENTRY_ORDERJSON = "entry.1260640085";
     const ENTRY_TOTAL     = "entry.910148683";
-    
+
     // Options
     const COLORS = ["gold", "light gold", "silver", "antique silver"];
     const SIZES  = ["XXS", "XS", "S", "M", "L"];
-    
-    // ✅ Updated products
+
+    // ✅ Products (your corrected list)
     const PRODUCTS = [
       { id:"thick",    name:"Thick",    price:15, img:"images/thick.jpg",    desc:"Bold statement bangles" },
       { id:"thin",     name:"Thin",     price:13, img:"images/thin.jpg",     desc:"Minimal everyday wear" },
@@ -149,8 +181,9 @@
       { id:"talisman", name:"Talisman", price:35, img:"images/talisman.jpg", desc:"Double the protection - Talisman" },
     ];
 
-    
-    // Cart stored in localStorage
+    // =========================
+    // CART STORAGE
+    // =========================
     const CART_KEY = "gaiabangles_cart_v1";
     const $ = (id) => document.getElementById(id);
 
@@ -162,8 +195,13 @@
       localStorage.setItem(CART_KEY, JSON.stringify(cart));
     }
 
-    function money(n){ return "$" + n.toFixed(2).replace(/\.00$/, ""); }
+    function money(n){
+      return "$" + n.toFixed(2).replace(/\.00$/, "");
+    }
 
+    // =========================
+    // UI: PRODUCTS
+    // =========================
     function renderProducts(){
       $("igBtn").href = INSTAGRAM_PROFILE_URL;
 
@@ -236,9 +274,8 @@
       }
 
       const cart = loadCart();
-
-      // Merge same item (same product + color + size)
       const existing = cart.find(i => i.productId === productId && i.color === color && i.size === size);
+
       if (existing) existing.qty += qty;
       else cart.push({ productId, color, size, qty });
 
@@ -246,6 +283,9 @@
       updateCartBadge();
     }
 
+    // =========================
+    // CART: totals + rendering
+    // =========================
     function cartTotal(cart){
       let total = 0;
       for (const item of cart){
@@ -263,7 +303,6 @@
     }
 
     function openCart(){
-      $("copiedOk").style.display = "none";
       renderCart();
       $("overlay").style.display = "flex";
     }
@@ -320,54 +359,72 @@
       };
     }
 
-    function buildOrderMessage(){
+    // =========================
+    // ORDER JSON for Google Form
+    // =========================
+    function buildOrderJsonObject(){
       const cart = loadCart();
-      const lines = [];
-      lines.push("Hi gaiabangles! I'd like to place an order:");
-      lines.push("");
 
-      cart.forEach((item) => {
-        const p = PRODUCTS.find(x => x.id === item.productId);
-        if (!p) return;
-        lines.push(`- ${p.name} | color: ${item.color} | size: ${item.size} | qty: ${item.qty} | ${money(p.price * item.qty)}`);
+      const items = cart.map(i => {
+        const p = PRODUCTS.find(x => x.id === i.productId);
+        return {
+          productId: i.productId,
+          productName: p ? p.name : i.productId,
+          color: i.color,
+          size: i.size,
+          qty: i.qty,
+          unitPrice: p ? p.price : null
+        };
       });
 
-      lines.push("");
-      lines.push(`Total: ${money(cartTotal(cart))}`);
-      lines.push("");
-      lines.push("Please confirm availability, delivery options, and final total. Thank you!");
-      return lines.join("\n");
+      return {
+        items,
+        total: Number(cartTotal(cart).toFixed(2)),
+        currency: "$"
+      };
     }
 
-    async function copyOrderToClipboard(){
+    function openGoogleFormCheckout(e){
+      e.preventDefault();
+
       const cart = loadCart();
-      if (!cart.length){
+      if (!cart.length) {
         alert("Your basket is empty.");
-        return false;
+        return;
       }
-      const msg = buildOrderMessage();
-      try {
-        await navigator.clipboard.writeText(msg);
-        $("copiedOk").style.display = "block";
-        return true;
-      } catch (e){
-        // Fallback: prompt
-        window.prompt("Copy this message, then send it to us on Instagram DM:", msg);
-        return true;
+
+      const firstName = $("firstName").value.trim();
+      const lastName  = $("lastName").value.trim();
+      const phone     = $("phone").value.trim();
+      const address   = $("address").value.trim();
+      const email     = $("email").value.trim();
+
+      if (!firstName || !lastName || !phone || !address || !email){
+        alert("Please fill in all delivery details.");
+        return;
       }
+
+      const fullName = `${firstName} ${lastName}`.trim();
+      const orderObj = buildOrderJsonObject();
+      const orderJson = JSON.stringify(orderObj);
+
+      const params = new URLSearchParams();
+      params.set(ENTRY_NAME, fullName);
+      params.set(ENTRY_EMAIL, email);
+      params.set(ENTRY_ADDRESS, address);
+      params.set(ENTRY_PHONE, phone);
+      params.set(ENTRY_ORDERJSON, orderJson);
+      params.set(ENTRY_TOTAL, String(orderObj.total));
+
+      const url = `${GOOGLE_FORM_BASE}&${params.toString()}`;
+      window.open(url, "_blank", "noreferrer");
     }
 
-    async function checkoutInstagram(){
-      const ok = await copyOrderToClipboard();
-      if (!ok) return;
-      window.open(INSTAGRAM_PROFILE_URL, "_blank", "noreferrer");
-    }
-
-    // Wire up
+    // =========================
+    // INIT
+    // =========================
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("y").textContent = new Date().getFullYear();
-      document.getElementById("checkoutForm").addEventListener("submit", openGoogleFormCheckout);
-
+      $("y").textContent = new Date().getFullYear();
       renderProducts();
       updateCartBadge();
 
@@ -375,70 +432,8 @@
       $("closeCartBtn").addEventListener("click", closeCart);
       $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeCart(); });
 
-      $("copyBtn").addEventListener("click", copyOrderToClipboard);
-      $("checkoutBtn").addEventListener("click", checkoutInstagram);
+      $("checkoutForm").addEventListener("submit", openGoogleFormCheckout);
     });
-
-    function buildOrderJsonObject(){
-  const cart = loadCart();
-
-  const items = cart.map(i => {
-    const p = PRODUCTS.find(x => x.id === i.productId);
-    return {
-      productId: i.productId,
-      productName: p ? p.name : i.productId,
-      color: i.color,
-      size: i.size,
-      qty: i.qty,
-      unitPrice: p ? p.price : null
-    };
-  });
-
-  return {
-    items,
-    total: Number(cartTotal(cart).toFixed(2)),
-    currency: "$"
-  };
-}
-
-function openGoogleFormCheckout(e){
-  e.preventDefault();
-
-  const cart = loadCart();
-  if (!cart.length) {
-    alert("Your basket is empty.");
-    return;
-  }
-
-  // Read delivery fields from your form inputs
-  const firstName = document.getElementById("firstName").value.trim();
-  const lastName  = document.getElementById("lastName").value.trim();
-  const phone     = document.getElementById("phone").value.trim();
-  const address   = document.getElementById("address").value.trim();
-  const email     = document.getElementById("email").value.trim();
-
-  if (!firstName || !lastName || !phone || !address || !email) {
-    alert("Please fill in all delivery details.");
-    return;
-  }
-
-  const fullName = `${firstName} ${lastName}`.trim();
-
-  const orderObj = buildOrderJsonObject();
-  const orderJson = JSON.stringify(orderObj);
-
-  const params = new URLSearchParams();
-  params.set(ENTRY_NAME, fullName);
-  params.set(ENTRY_EMAIL, email);
-  params.set(ENTRY_ADDRESS, address);
-  params.set(ENTRY_PHONE, phone);
-  params.set(ENTRY_ORDERJSON, orderJson);
-  params.set(ENTRY_TOTAL, String(orderObj.total));
-
-  const url = `${GOOGLE_FORM_BASE}&${params.toString()}`;
-  window.open(url, "_blank", "noreferrer");
-}
-
   </script>
 </body>
 </html>
