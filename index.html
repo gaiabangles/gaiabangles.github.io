@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>gaiabangles</title>
-  <meta name="description" content="gaiabangles — choose color, size, quantity. Basket + total. Order via Google Form." />
+  <meta name="description" content="gaiabangles — choose color, size, quantity. Basket + total. Submit order to Google Sheets." />
 
   <style>
     :root{
@@ -22,6 +22,7 @@
     .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
       text-decoration:none;border:1px solid #ddd;background:#fff;cursor:pointer}
     .btn:hover{transform:translateY(-1px)}
+    .btn[disabled]{opacity:.55;cursor:not-allowed}
     main{padding:18px 0 26px}
     .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
     .card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
@@ -77,7 +78,7 @@
           <a class="btn" id="igBtn" href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
         </div>
       </div>
-      <p class="small">Checkout opens a Google Form with your basket + total already filled. Submit the form to place your order.</p>
+      <p class="small">When you submit, your order is saved to our Google Sheet instantly (no Google Form step).</p>
     </div>
   </header>
 
@@ -110,11 +111,11 @@
         </div>
 
         <div class="warn">
-          After clicking <b>Submit order</b>, a Google Form will open with your basket details pre-filled. Please press <b>Submit</b> on the form to finalize the order.
+          Clicking <b>Submit order</b> will save your order to our Google Sheet. We’ll confirm availability + delivery after.
         </div>
 
-        <div class="ok" id="prefillOk">Form opened ✅ If you don't see your details filled in, please try again.</div>
-        <div class="danger" id="prefillErr">Could not open the form. Please check your pop-up blocker and try again.</div>
+        <div class="ok" id="submitOk">Order received ✅ We'll contact you shortly.</div>
+        <div class="danger" id="submitErr">Could not submit. Please try again.</div>
 
         <!-- Checkout form -->
         <form id="checkoutForm" style="margin-top:14px" novalidate>
@@ -162,23 +163,16 @@
     // ✅ Put your real Instagram profile URL here
     const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/gaiabangles/";
 
-    // ✅ Your Google Form prefill base (MUST be the "pp_url" version)
-    const GOOGLE_FORM_BASE =
-      "https://docs.google.com/forms/d/e/1ho2LdXIn7UdsgZGeU-dL05ETUXj_wocgpfFHDoxODuU/viewform?usp=pp_url";
-
-    // ✅ Your entry IDs
-    const ENTRY_NAME      = "entry.2005620554";
-    const ENTRY_EMAIL     = "entry.1045781291";
-    const ENTRY_ADDRESS   = "entry.1065046570";
-    const ENTRY_PHONE     = "entry.1166974658";
-    const ENTRY_ORDERJSON = "entry.1260640085";
-    const ENTRY_TOTAL     = "entry.910148683";
+    // ✅ Apps Script Web App URL (Orders API) — paste your deployed /exec URL
+    // Example: https://script.google.com/macros/s/AKfycb.../exec
+    const ORDERS_API_URL = "https://script.google.com/macros/s/AKfycbzI7prgokfafoBpJRDLLYPRbOPZmXmXZ_na8OOzXbZbiryfk8IdM7Sn7ZtcFrncLb3_ow/exec";
 
     // Options
     const COLORS = ["gold", "light gold", "silver", "antique silver"];
     const SIZES  = ["XXS", "XS", "S", "M", "L"];
 
-    // ✅ Products
+    // ✅ Products (still hardcoded here)
+    // If you want products pulled from your Stock Sheet, tell me your Products API URL and I’ll switch this to live loading.
     const PRODUCTS = [
       { id:"thick",    name:"Thick",    price:15, img:"images/thick.jpg",    desc:"Bold statement bangles" },
       { id:"thin",     name:"Thin",     price:13, img:"images/thin.jpg",     desc:"Minimal everyday wear" },
@@ -192,7 +186,7 @@
     // =========================
     // CART STORAGE
     // =========================
-    const CART_KEY = "gaiabangles_cart_v2";
+    const CART_KEY = "gaiabangles_cart_v3";
     const $ = (id) => document.getElementById(id);
 
     function loadCart(){
@@ -261,7 +255,6 @@
       }
     }
 
-    // Attach ONE click handler (prevents duplicate listeners if you ever re-render)
     function bindGridEvents(){
       const grid = $("productGrid");
       grid.addEventListener("click", (e) => {
@@ -314,8 +307,8 @@
     }
 
     function openCart(){
-      $("prefillOk").style.display = "none";
-      $("prefillErr").style.display = "none";
+      $("submitOk").style.display = "none";
+      $("submitErr").style.display = "none";
       renderCart();
       $("overlay").style.display = "flex";
     }
@@ -373,7 +366,7 @@
     }
 
     // =========================
-    // ORDER JSON for Google Form
+    // ORDER JSON
     // =========================
     function buildOrderJsonObject(){
       const cart = loadCart();
@@ -397,59 +390,83 @@
       };
     }
 
-    function validateCheckoutForm(){
+    // =========================
+    // SUBMIT DIRECTLY TO GOOGLE SHEETS (Apps Script)
+    // =========================
+    async function submitOrderToGoogleSheet(e){
+      e.preventDefault();
+
+      $("submitOk").style.display = "none";
+      $("submitErr").style.display = "none";
+
+      const cart = loadCart();
+      if (!cart.length) { alert("Your basket is empty."); return; }
+
       const firstName = $("firstName").value.trim();
       const lastName  = $("lastName").value.trim();
       const phone     = $("phone").value.trim();
       const address   = $("address").value.trim();
       const email     = $("email").value.trim();
 
-      if (!firstName || !lastName || !phone || !address || !email) return null;
-
-      // Light email sanity (browser does most of it)
-      if (!email.includes("@")) return null;
-
-      return { firstName, lastName, phone, address, email };
-    }
-
-    function openGoogleFormCheckout(e){
-      e.preventDefault();
-
-      $("prefillOk").style.display = "none";
-      $("prefillErr").style.display = "none";
-
-      const cart = loadCart();
-      if (!cart.length) {
-        alert("Your basket is empty.");
-        return;
-      }
-
-      const data = validateCheckoutForm();
-      if (!data){
+      if (!firstName || !lastName || !phone || !address || !email){
         alert("Please fill in all delivery details.");
         return;
       }
 
-      const fullName = `${data.firstName} ${data.lastName}`.trim();
+      if (!ORDERS_API_URL || ORDERS_API_URL.includes("PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")){
+        alert("Missing ORDERS_API_URL. Paste your Apps Script Web App /exec URL in the code.");
+        return;
+      }
+
       const orderObj = buildOrderJsonObject();
-      const orderJson = JSON.stringify(orderObj);
 
-      const params = new URLSearchParams();
-      params.set(ENTRY_NAME, fullName);
-      params.set(ENTRY_EMAIL, data.email);
-      params.set(ENTRY_ADDRESS, data.address);
-      params.set(ENTRY_PHONE, data.phone);
-      params.set(ENTRY_ORDERJSON, orderJson);
-      params.set(ENTRY_TOTAL, String(orderObj.total));
+      const payload = {
+        name: `${firstName} ${lastName}`.trim(),
+        email,
+        phone,
+        address,
+        items: orderObj.items,
+        total: orderObj.total,
+        currency: orderObj.currency,
+        createdAt: new Date().toISOString()
+      };
 
-      const url = `${GOOGLE_FORM_BASE}&${params.toString()}`;
+      const btn = $("submitOrderBtn");
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
 
-      // Open immediately on user action to avoid popup blockers
-      const w = window.open(url, "_blank", "noreferrer");
-      if (w) {
-        $("prefillOk").style.display = "block";
-      } else {
-        $("prefillErr").style.display = "block";
+      try {
+        // Use text/plain to avoid CORS preflight problems with Apps Script
+        const res = await fetch(ORDERS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!data || data.ok !== true) {
+          throw new Error((data && data.error) ? data.error : "Submission failed");
+        }
+
+        // Success ✅
+        saveCart([]);
+        updateCartBadge();
+        renderCart();
+        $("checkoutForm").reset();
+
+        $("submitOk").style.display = "block";
+        $("submitErr").style.display = "none";
+
+      } catch (err) {
+        console.error(err);
+        $("submitErr").style.display = "block";
+        $("submitOk").style.display = "none";
+        alert("Could not submit order. Please try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     }
 
@@ -475,7 +492,9 @@
       $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeCart(); });
 
       $("clearCartBtn").addEventListener("click", clearCart);
-      $("checkoutForm").addEventListener("submit", openGoogleFormCheckout);
+
+      // ✅ Now submits directly to Google Sheets via Apps Script
+      $("checkoutForm").addEventListener("submit", submitOrderToGoogleSheet);
     });
   </script>
 </body>
