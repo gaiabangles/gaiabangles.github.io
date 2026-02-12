@@ -121,22 +121,35 @@
   <script>
     // ✅ Set this to your real profile URL
     const INSTAGRAM_PROFILE_URL = "https://www.instagram.com"; // <-- replace with your profile link
-
+    
+    // ✅ Your Google Form prefill base
+    const GOOGLE_FORM_BASE =
+      "https://docs.google.com/forms/d/e/1FAIpQLSeIbRbmt_-ChjBlGUp2R5MAxlMa-jWXWgSPS-hHwHPfQMJcJQ/viewform?usp=pp_url";
+    
+    // ✅ Your entry IDs
+    const ENTRY_NAME      = "entry.2005620554";
+    const ENTRY_EMAIL     = "entry.1045781291";
+    const ENTRY_ADDRESS   = "entry.1065046570";
+    const ENTRY_PHONE     = "entry.1166974658";
+    const ENTRY_ORDERJSON = "entry.1260640085";
+    const ENTRY_TOTAL     = "entry.910148683";
+    
     // Options
     const COLORS = ["gold", "light gold", "silver", "antique silver"];
     const SIZES  = ["XXS", "XS", "S", "M", "L"];
-
-    // Products (edit prices any time)
+    
+    // ✅ Updated products
     const PRODUCTS = [
-      { id:"thick",   name:"Thick",   price:15, img:"images/thick.jpg",   desc:"Bold statement bangles" },
-      { id:"thin",    name:"Thin",    price:13, img:"images/thin.jpg",    desc:"Minimal everyday wear" },
-      { id:"twisted", name:"Twisted", price:20, img:"images/twisted.jpg", desc:"Texture + shine" },
-      { id:"rings",   name:"Rings",   price:9,  img:"images/rings.jpg",   desc:"Stackable ring bangles" },
-      { id:"maxi",    name:"Maxi",    price:30, img:"images/maxi.jpg",    desc:"Extra-bold statement piece" },
+      { id:"thick",    name:"Thick",    price:15, img:"images/thick.jpg",    desc:"Bold statement bangles" },
+      { id:"thin",     name:"Thin",     price:13, img:"images/thin.jpg",     desc:"Minimal everyday wear" },
+      { id:"twisted",  name:"Twisted",  price:20, img:"images/twisted.jpg",  desc:"Texture + shine" },
+      { id:"rings",    name:"Rings",    price:9,  img:"images/rings.jpg",    desc:"Stackable ring bangles" },
+      { id:"maxi",     name:"Maxi",     price:30, img:"images/maxi.jpg",     desc:"Extra-bold statement piece" },
       { id:"tress",    name:"Tress",    price:30, img:"images/tress.jpg",    desc:"Extra-bold statement piece" },
-      { id:"talisman",  name:"Talisman",  price:35, img:"images/talisman.jpg",  desc:"Double the protection - Talisam" },
+      { id:"talisman", name:"Talisman", price:35, img:"images/talisman.jpg", desc:"Double the protection - Talisman" },
     ];
 
+    
     // Cart stored in localStorage
     const CART_KEY = "gaiabangles_cart_v1";
     const $ = (id) => document.getElementById(id);
@@ -353,6 +366,8 @@
     // Wire up
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("y").textContent = new Date().getFullYear();
+      document.getElementById("checkoutForm").addEventListener("submit", openGoogleFormCheckout);
+
       renderProducts();
       updateCartBadge();
 
@@ -363,6 +378,67 @@
       $("copyBtn").addEventListener("click", copyOrderToClipboard);
       $("checkoutBtn").addEventListener("click", checkoutInstagram);
     });
+
+    function buildOrderJsonObject(){
+  const cart = loadCart();
+
+  const items = cart.map(i => {
+    const p = PRODUCTS.find(x => x.id === i.productId);
+    return {
+      productId: i.productId,
+      productName: p ? p.name : i.productId,
+      color: i.color,
+      size: i.size,
+      qty: i.qty,
+      unitPrice: p ? p.price : null
+    };
+  });
+
+  return {
+    items,
+    total: Number(cartTotal(cart).toFixed(2)),
+    currency: "$"
+  };
+}
+
+function openGoogleFormCheckout(e){
+  e.preventDefault();
+
+  const cart = loadCart();
+  if (!cart.length) {
+    alert("Your basket is empty.");
+    return;
+  }
+
+  // Read delivery fields from your form inputs
+  const firstName = document.getElementById("firstName").value.trim();
+  const lastName  = document.getElementById("lastName").value.trim();
+  const phone     = document.getElementById("phone").value.trim();
+  const address   = document.getElementById("address").value.trim();
+  const email     = document.getElementById("email").value.trim();
+
+  if (!firstName || !lastName || !phone || !address || !email) {
+    alert("Please fill in all delivery details.");
+    return;
+  }
+
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  const orderObj = buildOrderJsonObject();
+  const orderJson = JSON.stringify(orderObj);
+
+  const params = new URLSearchParams();
+  params.set(ENTRY_NAME, fullName);
+  params.set(ENTRY_EMAIL, email);
+  params.set(ENTRY_ADDRESS, address);
+  params.set(ENTRY_PHONE, phone);
+  params.set(ENTRY_ORDERJSON, orderJson);
+  params.set(ENTRY_TOTAL, String(orderObj.total));
+
+  const url = `${GOOGLE_FORM_BASE}&${params.toString()}`;
+  window.open(url, "_blank", "noreferrer");
+}
+
   </script>
 </body>
 </html>
