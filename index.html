@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>gaiabangles</title>
-  <meta name="description" content="gaiabangles — curated bangles & sets. Order via Instagram." />
+  <meta name="description" content="gaiabangles — bangles & sets. Choose color, size, quantity. Basket + total. Order via Instagram DM." />
 
   <style>
     :root{
@@ -13,26 +13,48 @@
     }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:var(--bg)}
     a{color:inherit}
-    .wrap{max-width:1050px;margin:0 auto;padding:0 16px}
-    header{background:var(--soft);padding:34px 0 18px;border-bottom:1px solid var(--border)}
+    .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+    header{background:var(--soft);padding:26px 0 14px;border-bottom:1px solid var(--border)}
     .top{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
     h1{margin:0;font-size:34px;letter-spacing:.3px}
     .tag{margin:6px 0 0;color:var(--muted)}
-    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .cta{display:flex;gap:10px;flex-wrap:wrap}
     .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
-      text-decoration:none;border:1px solid #ddd;background:#fff}
+      text-decoration:none;border:1px solid #ddd;background:#fff;cursor:pointer}
     .btn:hover{transform:translateY(-1px)}
-    main{padding:22px 0 30px}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    main{padding:18px 0 26px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
     .card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
     .card img{width:100%;height:240px;object-fit:cover;background:#f4f4f4}
     .p{padding:14px}
-    .name{font-weight:700}
+    .name{font-weight:800;font-size:18px}
     .meta{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.35}
-    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
-    .price{font-weight:700}
-    footer{border-top:1px solid var(--border);padding:18px 0;color:var(--muted)}
-    .small{font-size:13px}
+    .price{font-weight:800}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+    select,input[type="number"]{width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;background:#fff}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .controls .full{grid-column:1 / -1}
+    .addrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{border-top:1px solid var(--border);padding:16px 0;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:999px;border:1px solid #ddd;background:#fff;font-weight:700}
+
+    /* Modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal{background:#fff;border-radius:18px;max-width:720px;width:100%;border:1px solid #eee;overflow:hidden}
+    .modal-h{padding:14px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .modal-b{padding:14px 16px}
+    .cart-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid #f1f1f1}
+    .cart-item:last-child{border-bottom:none}
+    .ci-title{font-weight:700}
+    .ci-meta{color:var(--muted);font-size:13px;margin-top:2px}
+    .ci-actions{display:flex;gap:10px;align-items:center}
+    .linkbtn{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 10px;cursor:pointer}
+    .totals{margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+    .checkout{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .warn{background:#fff8e1;border:1px solid #ffe4a3;color:#6b4f00;border-radius:12px;padding:10px;margin-top:10px;font-size:13px}
+    .ok{background:#eefbf0;border:1px solid #bfe8c7;color:#1b5e20;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;display:none}
   </style>
 </head>
 
@@ -42,106 +64,304 @@
       <div class="top">
         <div>
           <h1>gaiabangles</h1>
-          <p class="tag">Bangles • Sets • Everyday + statement pieces</p>
+          <p class="tag">Choose color + size + quantity • Add to basket • Order via Instagram DM</p>
         </div>
         <div class="cta">
-          <a class="btn" href="https://www.instagram.com" target="_blank" rel="noreferrer">Order on Instagram</a>
-          <!-- Optional: add WhatsApp later -->
-          <!-- <a class="btn" href="https://wa.me/COUNTRYCODEPHONENUMBER?text=Hi%20I%20want%20to%20order%20from%20gaiabangles" target="_blank">WhatsApp</a> -->
+          <button class="btn" id="openCartBtn" type="button">
+            Basket <span class="pill" id="cartCount">0</span>
+          </button>
+          <a class="btn" id="igBtn" href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
         </div>
       </div>
-      <p class="small">Tip: Tap a product → message us the product name to order.</p>
+      <p class="small">Tip: When you checkout, we’ll copy your basket summary. Paste it into our Instagram DM to confirm.</p>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-      <div class="grid">
-
-        <!-- 1 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/thick.jpg" alt="Thick Bangles">
-          <div class="p">
-            <div class="name">Thick</div>
-            <div class="row">
-              <div class="meta">Bold statement bangles</div>
-              <div class="price">$15</div>
-            </div>
-          </div>
-        </a>
-
-        <!-- 2 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/thin.jpg" alt="Thin Bangles">
-          <div class="p">
-            <div class="name">Thin</div>
-            <div class="row">
-              <div class="meta">Minimal everyday wear</div>
-              <div class="price">$13</div>
-            </div>
-          </div>
-        </a>
-
-        <!-- 3 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/twisted.jpg" alt="Twisted Bangles">
-          <div class="p">
-            <div class="name">Twisted</div>
-            <div class="row">
-              <div class="meta">Texture + shine</div>
-              <div class="price">$20</div>
-            </div>
-          </div>
-        </a>
-
-        <!-- 4 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/rings.jpg" alt="Bangle Rings">
-          <div class="p">
-            <div class="name">Rings</div>
-            <div class="row">
-              <div class="meta">Stackable ring bangles</div>
-              <div class="price">$9</div>
-            </div>
-          </div>
-        </a>
-
-        <!-- 5 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/maxi.jpg" alt="Maxi Bangles">
-          <div class="p">
-            <div class="name">Maxi</div>
-            <div class="row">
-              <div class="meta">Extra-bold statement piece</div>
-              <div class="price">$30</div>
-            </div>
-          </div>
-        </a>
-
-        <!-- 6 -->
-        <a class="card" href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          <img src="images/maxi.jpg" alt="Talisman Bangles">
-          <div class="p">
-            <div class="name">Talisman</div>
-            <div class="row">
-              <div class="meta">Clean talisman finish</div>
-              <div class="price">$35</div>
-            </div>
-          </div>
-        </a>
-
-      </div>
+      <div class="grid" id="productGrid"></div>
     </div>
   </main>
 
   <footer>
-    <div class="wrap small">
-      © <span id="y"></span> gaiabangles • Powered by GitHub Pages
-    </div>
+    <div class="wrap small">© <span id="y"></span> gaiabangles • Powered by GitHub Pages</div>
   </footer>
 
+  <!-- Cart Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+      <div class="modal-h">
+        <div>
+          <div id="cartTitle" style="font-weight:900;font-size:18px">Your basket</div>
+          <div class="small" id="cartSubtitle"></div>
+        </div>
+        <button class="btn" id="closeCartBtn" type="button">Close</button>
+      </div>
+      <div class="modal-b">
+        <div id="cartList"></div>
+
+        <div class="totals">
+          <div>Total</div>
+          <div id="cartTotal">$0</div>
+        </div>
+
+        <div class="warn">
+          Instagram doesn’t reliably support pre-filled DM messages from websites. The button below will copy your order, then open our Instagram page. Paste the message into DM and send.
+        </div>
+        <div class="ok" id="copiedOk">Copied! Instagram opened — paste the message into DM.</div>
+
+        <div class="checkout">
+          <button class="btn" id="copyBtn" type="button">Copy order</button>
+          <button class="btn" id="checkoutBtn" type="button">Checkout via Instagram DM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    document.getElementById("y").textContent = new Date().getFullYear();
+    // ✅ Set this to your real profile URL
+    const INSTAGRAM_PROFILE_URL = "https://www.instagram.com"; // <-- replace with your profile link
+
+    // Options
+    const COLORS = ["gold", "light gold", "silver", "antique silver"];
+    const SIZES  = ["XXS", "XS", "S", "M", "L"];
+
+    // Products (edit prices any time)
+    const PRODUCTS = [
+      { id:"thick",   name:"Thick",   price:15, img:"images/thick.jpg",   desc:"Bold statement bangles" },
+      { id:"thin",    name:"Thin",    price:10, img:"images/thin.jpg",    desc:"Minimal everyday wear" },
+      { id:"twisted", name:"Twisted", price:12, img:"images/twisted.jpg", desc:"Texture + shine" },
+      { id:"rings",   name:"Rings",   price:9,  img:"images/rings.jpg",   desc:"Stackable ring bangles" },
+      { id:"maxi",    name:"Maxi",    price:18, img:"images/maxi.jpg",    desc:"Extra-bold statement piece" },
+      { id:"talisman",  name:"Talisman",  price:14, img:"images/talisman.jpg",  desc:"Double the protection - Talisam" },
+    ];
+
+    // Cart stored in localStorage
+    const CART_KEY = "gaiabangles_cart_v1";
+    const $ = (id) => document.getElementById(id);
+
+    function loadCart(){
+      try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); }
+      catch { return []; }
+    }
+    function saveCart(cart){
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    }
+
+    function money(n){ return "$" + n.toFixed(2).replace(/\.00$/, ""); }
+
+    function renderProducts(){
+      $("igBtn").href = INSTAGRAM_PROFILE_URL;
+
+      const grid = $("productGrid");
+      grid.innerHTML = "";
+
+      for (const p of PRODUCTS){
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <img src="${p.img}" alt="${p.name} bangles">
+          <div class="p">
+            <div class="name">${p.name}</div>
+            <div class="meta">${p.desc}</div>
+
+            <div class="row">
+              <div class="small">Price</div>
+              <div class="price">${money(p.price)}</div>
+            </div>
+
+            <div class="controls">
+              <div>
+                <label for="${p.id}_color">Color</label>
+                <select id="${p.id}_color">
+                  ${COLORS.map(c => `<option value="${c}">${c}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label for="${p.id}_size">Size</label>
+                <select id="${p.id}_size">
+                  ${SIZES.map(s => `<option value="${s}">${s}</option>`).join("")}
+                </select>
+              </div>
+              <div class="full">
+                <label for="${p.id}_qty">Quantity</label>
+                <input id="${p.id}_qty" type="number" min="1" value="1" inputmode="numeric" />
+              </div>
+            </div>
+
+            <div class="addrow">
+              <button class="btn" type="button" data-add="${p.id}">Add to basket</button>
+              <span class="small">Tap basket to review</span>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      }
+
+      grid.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-add]");
+        if (!btn) return;
+        const productId = btn.getAttribute("data-add");
+        addToCart(productId);
+      });
+    }
+
+    function addToCart(productId){
+      const product = PRODUCTS.find(x => x.id === productId);
+      if (!product) return;
+
+      const color = $(productId + "_color").value;
+      const size  = $(productId + "_size").value;
+      const qty   = parseInt($(productId + "_qty").value || "1", 10);
+
+      if (!Number.isFinite(qty) || qty < 1){
+        alert("Please enter a valid quantity (1 or more).");
+        return;
+      }
+
+      const cart = loadCart();
+
+      // Merge same item (same product + color + size)
+      const existing = cart.find(i => i.productId === productId && i.color === color && i.size === size);
+      if (existing) existing.qty += qty;
+      else cart.push({ productId, color, size, qty });
+
+      saveCart(cart);
+      updateCartBadge();
+    }
+
+    function cartTotal(cart){
+      let total = 0;
+      for (const item of cart){
+        const product = PRODUCTS.find(p => p.id === item.productId);
+        if (!product) continue;
+        total += product.price * item.qty;
+      }
+      return total;
+    }
+
+    function updateCartBadge(){
+      const cart = loadCart();
+      const count = cart.reduce((sum, i) => sum + i.qty, 0);
+      $("cartCount").textContent = String(count);
+    }
+
+    function openCart(){
+      $("copiedOk").style.display = "none";
+      renderCart();
+      $("overlay").style.display = "flex";
+    }
+    function closeCart(){
+      $("overlay").style.display = "none";
+    }
+
+    function renderCart(){
+      const cart = loadCart();
+      $("cartSubtitle").textContent = cart.length ? "Review your selections before checkout." : "Your basket is empty.";
+
+      const list = $("cartList");
+      list.innerHTML = "";
+
+      if (!cart.length){
+        list.innerHTML = `<div class="small">Add items from the products above.</div>`;
+      } else {
+        cart.forEach((item, idx) => {
+          const p = PRODUCTS.find(x => x.id === item.productId);
+          if (!p) return;
+
+          const lineTotal = p.price * item.qty;
+
+          const row = document.createElement("div");
+          row.className = "cart-item";
+          row.innerHTML = `
+            <div>
+              <div class="ci-title">${p.name}</div>
+              <div class="ci-meta">
+                Color: <b>${item.color}</b> • Size: <b>${item.size}</b> • Qty: <b>${item.qty}</b><br/>
+                ${money(p.price)} each
+              </div>
+            </div>
+            <div class="ci-actions">
+              <div style="font-weight:800">${money(lineTotal)}</div>
+              <button class="linkbtn" type="button" data-remove="${idx}">Remove</button>
+            </div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      $("cartTotal").textContent = money(cartTotal(cart));
+
+      list.onclick = (e) => {
+        const rm = e.target.closest("[data-remove]");
+        if (!rm) return;
+        const idx = parseInt(rm.getAttribute("data-remove"), 10);
+        const cartNow = loadCart();
+        cartNow.splice(idx, 1);
+        saveCart(cartNow);
+        updateCartBadge();
+        renderCart();
+      };
+    }
+
+    function buildOrderMessage(){
+      const cart = loadCart();
+      const lines = [];
+      lines.push("Hi gaiabangles! I'd like to place an order:");
+      lines.push("");
+
+      cart.forEach((item) => {
+        const p = PRODUCTS.find(x => x.id === item.productId);
+        if (!p) return;
+        lines.push(`- ${p.name} | color: ${item.color} | size: ${item.size} | qty: ${item.qty} | ${money(p.price * item.qty)}`);
+      });
+
+      lines.push("");
+      lines.push(`Total: ${money(cartTotal(cart))}`);
+      lines.push("");
+      lines.push("Please confirm availability, delivery options, and final total. Thank you!");
+      return lines.join("\n");
+    }
+
+    async function copyOrderToClipboard(){
+      const cart = loadCart();
+      if (!cart.length){
+        alert("Your basket is empty.");
+        return false;
+      }
+      const msg = buildOrderMessage();
+      try {
+        await navigator.clipboard.writeText(msg);
+        $("copiedOk").style.display = "block";
+        return true;
+      } catch (e){
+        // Fallback: prompt
+        window.prompt("Copy this message, then send it to us on Instagram DM:", msg);
+        return true;
+      }
+    }
+
+    async function checkoutInstagram(){
+      const ok = await copyOrderToClipboard();
+      if (!ok) return;
+      window.open(INSTAGRAM_PROFILE_URL, "_blank", "noreferrer");
+    }
+
+    // Wire up
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("y").textContent = new Date().getFullYear();
+      renderProducts();
+      updateCartBadge();
+
+      $("openCartBtn").addEventListener("click", openCart);
+      $("closeCartBtn").addEventListener("click", closeCart);
+      $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeCart(); });
+
+      $("copyBtn").addEventListener("click", copyOrderToClipboard);
+      $("checkoutBtn").addEventListener("click", checkoutInstagram);
+    });
   </script>
 </body>
 </html>
