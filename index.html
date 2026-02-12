@@ -56,6 +56,9 @@
     .linkbtn{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 10px;cursor:pointer}
     .totals{margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
     .warn{background:#fff8e1;border:1px solid #ffe4a3;color:#6b4f00;border-radius:12px;padding:10px;margin-top:12px;font-size:13px}
+    .ok{background:#eefbf0;border:1px solid #bfe8c7;color:#1b5e20;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;display:none}
+    .danger{background:#fff0f0;border:1px solid #ffd0d0;color:#8a1f1f;border-radius:12px;padding:10px;margin-top:10px;font-size:13px;display:none}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
   </style>
 </head>
 
@@ -110,35 +113,40 @@
           After clicking <b>Submit order</b>, a Google Form will open with your basket details pre-filled. Please press <b>Submit</b> on the form to finalize the order.
         </div>
 
+        <div class="ok" id="prefillOk">Form opened ✅ If you don't see your details filled in, please try again.</div>
+        <div class="danger" id="prefillErr">Could not open the form. Please check your pop-up blocker and try again.</div>
+
         <!-- Checkout form -->
-        <form id="checkoutForm" style="margin-top:14px">
+        <form id="checkoutForm" style="margin-top:14px" novalidate>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <label for="firstName">First name</label>
-              <input id="firstName" name="firstName" required type="text" />
+              <input id="firstName" name="firstName" required type="text" autocomplete="given-name" />
             </div>
             <div>
               <label for="lastName">Last name</label>
-              <input id="lastName" name="lastName" required type="text" />
+              <input id="lastName" name="lastName" required type="text" autocomplete="family-name" />
             </div>
 
             <div style="grid-column:1 / -1">
               <label for="phone">Phone number</label>
-              <input id="phone" name="phone" required type="text" placeholder="+961..." />
+              <input id="phone" name="phone" required type="text" placeholder="+961..." autocomplete="tel" />
+              <div class="hint">Use international format if possible (e.g. +961...).</div>
             </div>
 
             <div style="grid-column:1 / -1">
               <label for="address">Full delivery address (Lebanon)</label>
-              <textarea id="address" name="address" required placeholder="Street, building, floor, city, district..."></textarea>
+              <textarea id="address" name="address" required placeholder="Street, building, floor, city, district..." autocomplete="street-address"></textarea>
             </div>
 
             <div style="grid-column:1 / -1">
               <label for="email">Email</label>
-              <input id="email" name="email" type="email" required />
+              <input id="email" name="email" type="email" required autocomplete="email" />
             </div>
           </div>
 
-          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px">
+            <button class="btn" id="clearCartBtn" type="button">Clear basket</button>
             <button class="btn" id="submitOrderBtn" type="submit">Submit order</button>
           </div>
         </form>
@@ -154,10 +162,11 @@
     // ✅ Put your real Instagram profile URL here
     const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/gaiabangles/";
 
-    // ✅ Your Google Form prefill base
+    // ✅ Your Google Form prefill base (MUST be the "pp_url" version)
     const GOOGLE_FORM_BASE =
-      "https://docs.google.com/forms/d/1ho2LdXIn7UdsgZGeU-dL05ETUXj_wocgpfFHDoxODuU/viewform?usp=pp_url";
-    // ✅ Your entry IDs (from your link)
+      "https://docs.google.com/forms/d/e/1ho2LdXIn7UdsgZGeU-dL05ETUXj_wocgpfFHDoxODuU/viewform?usp=pp_url";
+
+    // ✅ Your entry IDs
     const ENTRY_NAME      = "entry.2005620554";
     const ENTRY_EMAIL     = "entry.1045781291";
     const ENTRY_ADDRESS   = "entry.1065046570";
@@ -169,7 +178,7 @@
     const COLORS = ["gold", "light gold", "silver", "antique silver"];
     const SIZES  = ["XXS", "XS", "S", "M", "L"];
 
-    // ✅ Products (your corrected list)
+    // ✅ Products
     const PRODUCTS = [
       { id:"thick",    name:"Thick",    price:15, img:"images/thick.jpg",    desc:"Bold statement bangles" },
       { id:"thin",     name:"Thin",     price:13, img:"images/thin.jpg",     desc:"Minimal everyday wear" },
@@ -183,7 +192,7 @@
     // =========================
     // CART STORAGE
     // =========================
-    const CART_KEY = "gaiabangles_cart_v1";
+    const CART_KEY = "gaiabangles_cart_v2";
     const $ = (id) => document.getElementById(id);
 
     function loadCart(){
@@ -250,12 +259,15 @@
 
         grid.appendChild(card);
       }
+    }
 
+    // Attach ONE click handler (prevents duplicate listeners if you ever re-render)
+    function bindGridEvents(){
+      const grid = $("productGrid");
       grid.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-add]");
         if (!btn) return;
-        const productId = btn.getAttribute("data-add");
-        addToCart(productId);
+        addToCart(btn.getAttribute("data-add"));
       });
     }
 
@@ -302,6 +314,8 @@
     }
 
     function openCart(){
+      $("prefillOk").style.display = "none";
+      $("prefillErr").style.display = "none";
       renderCart();
       $("overlay").style.display = "flex";
     }
@@ -383,8 +397,26 @@
       };
     }
 
+    function validateCheckoutForm(){
+      const firstName = $("firstName").value.trim();
+      const lastName  = $("lastName").value.trim();
+      const phone     = $("phone").value.trim();
+      const address   = $("address").value.trim();
+      const email     = $("email").value.trim();
+
+      if (!firstName || !lastName || !phone || !address || !email) return null;
+
+      // Light email sanity (browser does most of it)
+      if (!email.includes("@")) return null;
+
+      return { firstName, lastName, phone, address, email };
+    }
+
     function openGoogleFormCheckout(e){
       e.preventDefault();
+
+      $("prefillOk").style.display = "none";
+      $("prefillErr").style.display = "none";
 
       const cart = loadCart();
       if (!cart.length) {
@@ -392,31 +424,40 @@
         return;
       }
 
-      const firstName = $("firstName").value.trim();
-      const lastName  = $("lastName").value.trim();
-      const phone     = $("phone").value.trim();
-      const address   = $("address").value.trim();
-      const email     = $("email").value.trim();
-
-      if (!firstName || !lastName || !phone || !address || !email){
+      const data = validateCheckoutForm();
+      if (!data){
         alert("Please fill in all delivery details.");
         return;
       }
 
-      const fullName = `${firstName} ${lastName}`.trim();
+      const fullName = `${data.firstName} ${data.lastName}`.trim();
       const orderObj = buildOrderJsonObject();
       const orderJson = JSON.stringify(orderObj);
 
       const params = new URLSearchParams();
       params.set(ENTRY_NAME, fullName);
-      params.set(ENTRY_EMAIL, email);
-      params.set(ENTRY_ADDRESS, address);
-      params.set(ENTRY_PHONE, phone);
+      params.set(ENTRY_EMAIL, data.email);
+      params.set(ENTRY_ADDRESS, data.address);
+      params.set(ENTRY_PHONE, data.phone);
       params.set(ENTRY_ORDERJSON, orderJson);
       params.set(ENTRY_TOTAL, String(orderObj.total));
 
       const url = `${GOOGLE_FORM_BASE}&${params.toString()}`;
-      window.open(url, "_blank", "noreferrer");
+
+      // Open immediately on user action to avoid popup blockers
+      const w = window.open(url, "_blank", "noreferrer");
+      if (w) {
+        $("prefillOk").style.display = "block";
+      } else {
+        $("prefillErr").style.display = "block";
+      }
+    }
+
+    function clearCart(){
+      if (!confirm("Clear your basket?")) return;
+      saveCart([]);
+      updateCartBadge();
+      renderCart();
     }
 
     // =========================
@@ -424,13 +465,16 @@
     // =========================
     document.addEventListener("DOMContentLoaded", () => {
       $("y").textContent = new Date().getFullYear();
+
       renderProducts();
+      bindGridEvents();
       updateCartBadge();
 
       $("openCartBtn").addEventListener("click", openCart);
       $("closeCartBtn").addEventListener("click", closeCart);
       $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeCart(); });
 
+      $("clearCartBtn").addEventListener("click", clearCart);
       $("checkoutForm").addEventListener("submit", openGoogleFormCheckout);
     });
   </script>
